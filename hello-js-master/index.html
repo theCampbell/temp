@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>LaunchDarkly Experimentaion Tutorial</title>
+    <script src="https://app.launchdarkly.com/snippet/ldclient.min.js"></script>
+  </head>
+  <body>
+    <script>
+      //Use a random number generator to ensure a unique user when the page is loaded.
+      var user = {"key": Math.random()};
+      
+      var div = document.createElement("div");
+      document.body.appendChild(div);
+      
+      div.appendChild(document.createTextNode('Initializing...'));
+      var ldclient = LDClient.initialize('5c33cd7fdd35341eeaece61e', user);
+      
+      function render() {
+        var showNewBackground = ldclient.variation("new-background", false);
+        var label = (showNewBackground ? "Showing red" : "Showing blue") + " background to " + user.key;
+        div.replaceChild(document.createTextNode(label), div.firstChild);
+        
+        if(showNewBackground){
+          document.body.style.backgroundColor = "red";
+        }
+        else{
+          document.body.style.backgroundColor = "blue";
+        }
+      }
+      
+      function virtualizeTraffic(){
+        var newUser = {"key": Math.random()};
+        ldclient.identify(newUser, null);
+        var showNewBackground = ldclient.variation("new-background", false);
+        console.log("New user's flags served " + newUser.key + " " + showNewBackground + "\n");
+
+        //skew for each colour
+        //can we get the compare flag values via the rest api?
+        if(newUser.key > .7){
+          document.getElementById("completePurchase").click();
+        }
+      
+        ldclient.track("new-background", newUser);
+      }
+
+      ldclient.on('ready', render);
+      ldclient.on('change', render);
+      ldclient.track("new-background", user);
+    </script>
+    <div>
+      <button id=completePurchase>Complete Purchase</button>
+      <button onclick="virtualizeTraffic()" id=virtualizeTraffic>Virtualize Traffic</button>
+    </div>
+    </div>
+  </body>
+</html>
